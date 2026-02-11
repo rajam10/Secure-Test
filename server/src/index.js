@@ -10,8 +10,12 @@ import adminLogsRouter from "./routes/adminLogs.js";
 dotenv.config();
 
 const app = express();
-const port = process.env.APP_PORT || 4000;
-const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
+
+// 🚨 Railway requires PORT (not APP_PORT)
+const port = process.env.PORT || 4000;
+
+// allow Railway + local frontend
+const corsOrigin = process.env.CORS_ORIGIN || "*";
 
 app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json());
@@ -24,14 +28,16 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
 
+// start server safely (never crash container)
 (async () => {
   try {
     await initSchema();
-    app.listen(port, () => {
-      console.log(`Secure test server listening on port ${port}`);
-    });
+    console.log("✅ Schema initialized");
   } catch (err) {
-    console.error("Failed to initialize schema:", err);
-    process.exit(1);
+    console.error("⚠ Schema init failed:", err.message);
   }
+
+  app.listen(port, () => {
+    console.log(`🚀 Secure test server running on port ${port}`);
+  });
 })();
