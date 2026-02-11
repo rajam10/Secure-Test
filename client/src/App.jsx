@@ -94,6 +94,13 @@ function useBrowserEnforcement(attemptId, enabled) {
    const [candidateId, setCandidateId] = useState("candidate-123");
    const [durationMinutes, setDurationMinutes] = useState(30);
    const [submitted, setSubmitted] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
+  const [logCandidates, setLogCandidates] = useState([]);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [candidateEvents, setCandidateEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+  const [showEventsModal, setShowEventsModal] = useState(false);
  
   useBrowserEnforcement(attemptId, !submitted);
  
@@ -141,7 +148,51 @@ function useBrowserEnforcement(attemptId, enabled) {
      } catch (e) {
        console.error("Timer sync failed", e);
      }
-   }
+    }
+
+  async function loadLogCandidates() {
+    setLoadingCandidates(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/logs/candidates`);
+      if (!res.ok) throw new Error("Failed to load candidates");
+      const data = await res.json();
+      setLogCandidates(data.candidates || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingCandidates(false);
+    }
+  }
+
+  async function loadCandidateEvents(candidate) {
+    setLoadingEvents(true);
+    try {
+      const res = await fetch(
+        `${API_BASE}/admin/logs/candidates/${encodeURIComponent(candidate)}/events`
+      );
+      if (!res.ok) throw new Error("Failed to load events");
+      const data = await res.json();
+      setCandidateEvents(data.events || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingEvents(false);
+    }
+  }
+
+  async function handleToggleLogs() {
+    const next = !showLogs;
+    setShowLogs(next);
+    if (next && logCandidates.length === 0) {
+      await loadLogCandidates();
+    }
+  }
+
+  async function handleCandidateClick(id) {
+    setSelectedCandidate(id);
+    await loadCandidateEvents(id);
+    setShowEventsModal(true);
+  }
  
    async function handleManualSubmit() {
      if (!attemptId) return;
@@ -183,21 +234,103 @@ function useBrowserEnforcement(attemptId, enabled) {
          padding: "32px"
        }}
      >
-       <div
-         style={{
-           maxWidth: "800px",
-           margin: "0 auto",
-           background: "#020617",
-           borderRadius: "16px",
-           padding: "24px",
-           boxShadow: "0 20px 40px rgba(0,0,0,0.6)",
-           border: "1px solid rgba(148,163,184,0.3)"
-         }}
-       >
-         <h1 style={{ fontSize: "24px", marginBottom: "8px" }}>Secure Assessment Environment</h1>
-         <p style={{ color: "#9ca3af", marginBottom: "24px" }}>
-           Timer-enforced, monitored test session. Events are logged for employer review.
-         </p>
+      <div
+        style={{
+          maxWidth: "900px",
+          margin: "0 auto",
+          background: "#020617",
+          borderRadius: "16px",
+          padding: "24px",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.6)",
+          border: "1px solid rgba(148,163,184,0.3)"
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "16px",
+            gap: "12px"
+          }}
+        >
+          <div>
+            <h1 style={{ fontSize: "24px", marginBottom: "4px" }}>
+              Secure Assessment Environment
+            </h1>
+            <p style={{ color: "#9ca3af", marginBottom: 0 }}>
+              Timer-enforced, monitored test session. Events are logged for employer review.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleToggleLogs}
+            style={{
+              padding: "8px 14px",
+              borderRadius: "999px",
+              border: "1px solid #4b5563",
+              backgroundColor: showLogs ? "#111827" : "#020617",
+              color: "white",
+              fontSize: "13px",
+              cursor: "pointer"
+            }}
+          >
+            {showLogs ? "Hide Logs" : "View Logs"}
+          </button>
+        </div>
+
+        {showLogs && (
+          <div
+            style={{
+              marginBottom: "20px",
+              padding: "12px",
+              borderRadius: "12px",
+              border: "1px solid #4b5563",
+              backgroundColor: "#020617"
+            }}
+          >
+            <h2 style={{ fontSize: "16px", marginBottom: "8px" }}>Candidates</h2>
+            {loadingCandidates && (
+              <p style={{ fontSize: "14px", color: "#9ca3af" }}>Loading candidates...</p>
+            )}
+            {!loadingCandidates && logCandidates.length === 0 && (
+              <p style={{ fontSize: "14px", color: "#9ca3af" }}>No candidates found yet.</p>
+            )}
+            {!loadingCandidates && logCandidates.length > 0 && (
+              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                {logCandidates.map((c) => (
+                  <li
+                    key={c.candidate_id}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "6px 0",
+                      borderBottom: "1px solid rgba(55,65,81,0.6)"
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleCandidateClick(c.candidate_id)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#38bdf8",
+                        cursor: "pointer",
+                        textAlign: "left"
+                      }}
+                    >
+                      {c.candidate_id}
+                    </button>
+                    <span style={{ fontSize: "12px", color: "#9ca3af" }}>
+                      {c.attempts} attempt{c.attempts !== 1 ? "s" : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
  
          {!attemptId && (
            <form onSubmit={handleStart} style={{ marginBottom: "24px" }}>
@@ -308,19 +441,150 @@ function useBrowserEnforcement(attemptId, enabled) {
              )}
            </>
          )}
-       </div>
- 
+      </div>
+
       {attemptId && remainingMs != null && !submitted && (
-         <Timer
-           attemptId={attemptId}
-           durationMs={remainingMs}
-           onExpire={() => {
-             // can show UI notification if desired
-           }}
-           onAutoSubmit={handleAutoSubmit}
-         />
-       )}
-     </div>
-   );
- }
- 
+        <Timer
+          attemptId={attemptId}
+          durationMs={remainingMs}
+          onExpire={() => {
+            // can show UI notification if desired
+          }}
+          onAutoSubmit={handleAutoSubmit}
+        />
+      )}
+
+      {showEventsModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15,23,42,0.85)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10000
+          }}
+        >
+          <div
+            style={{
+              width: "90%",
+              maxWidth: "900px",
+              maxHeight: "80vh",
+              backgroundColor: "#020617",
+              borderRadius: "16px",
+              border: "1px solid #4b5563",
+              padding: "16px",
+              display: "flex",
+              flexDirection: "column"
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "8px"
+              }}
+            >
+              <h2 style={{ fontSize: "18px" }}>
+                Events for candidate: <span style={{ color: "#38bdf8" }}>{selectedCandidate}</span>
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowEventsModal(false)}
+                style={{
+                  border: "none",
+                  borderRadius: "999px",
+                  padding: "6px 10px",
+                  backgroundColor: "#4b5563",
+                  color: "white",
+                  cursor: "pointer",
+                  fontSize: "13px"
+                }}
+              >
+                Close
+              </button>
+            </div>
+
+            {loadingEvents && (
+              <p style={{ fontSize: "14px", color: "#9ca3af" }}>Loading events...</p>
+            )}
+
+            {!loadingEvents && candidateEvents.length === 0 && (
+              <p style={{ fontSize: "14px", color: "#9ca3af" }}>No events for this candidate.</p>
+            )}
+
+            {!loadingEvents && candidateEvents.length > 0 && (
+              <div
+                style={{
+                  marginTop: "8px",
+                  overflowY: "auto",
+                  paddingRight: "4px"
+                }}
+              >
+                {candidateEvents.map((ev) => (
+                  <div
+                    key={ev.id}
+                    style={{
+                      padding: "8px 6px",
+                      borderBottom: "1px solid rgba(55,65,81,0.6)",
+                      fontSize: "13px"
+                    }}
+                  >
+                    <div style={{ marginBottom: "2px" }}>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "2px 6px",
+                          borderRadius: "999px",
+                          backgroundColor: "#0f172a",
+                          color: "#f97316",
+                          fontSize: "11px",
+                          marginRight: "6px"
+                        }}
+                      >
+                        {ev.event_type}
+                      </span>
+                      <span style={{ color: "#9ca3af" }}>
+                        {new Date(ev.event_ts).toLocaleString()}
+                      </span>
+                    </div>
+                    <div style={{ color: "#9ca3af" }}>
+                      Attempt: <code>{ev.attempt_id}</code>
+                    </div>
+                    {ev.metadata && (
+                      <div
+                        style={{
+                          marginTop: "2px",
+                          color: "#9ca3af",
+                          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+                          fontSize: "12px",
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word"
+                        }}
+                      >
+                        {(() => {
+                          try {
+                            const parsed =
+                              typeof ev.metadata === "string"
+                                ? JSON.parse(ev.metadata)
+                                : ev.metadata;
+                            return JSON.stringify(parsed, null, 2);
+                          } catch {
+                            return String(ev.metadata);
+                          }
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+}

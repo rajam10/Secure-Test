@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 
 import { initSchema } from "./db.js";
 import routes from "./routes/index.js";
+import adminLogsRouter from "./routes/adminLogs.js";
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 app.use("/api/attempts", routes);
+app.use("/api/admin", adminLogsRouter);
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
