@@ -1,8 +1,6 @@
  import React, { useEffect, useState } from "react";
  import { Timer } from "./Timer";
 import { initEventLogger, logEvent, shutdownEventLogger } from "./eventLogger";
-import dotenv from "dotenv";
-dotenv.config();
  
  const API_BASE = `${process.env.REACT_APP_API_BASE}/api`;
  
