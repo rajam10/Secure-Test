@@ -3,7 +3,15 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const pool = mysql.createPool(process.env.MYSQL_URL);
+const pool = mysql.createPool({
+  host: process.env.MYSQLHOST || process.env.DB_HOST ,
+  port: Number(process.env.MYSQLPORT || process.env.DB_PORT),
+  user: process.env.MYSQLUSER || process.env.DB_USER ,
+  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD ,
+  database: process.env.MYSQLDATABASE || process.env.DB_NAME ,
+  connectionLimit: 10
+});
+ 
 
 // retry helper
 async function wait(ms) {
