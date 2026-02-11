@@ -20,14 +20,32 @@
  let queue = [];
  let attemptIdGlobal = null;
  let batchIntervalId = null;
+let enabled = true;
+let beforeUnloadHandler = null;
  
  export function initEventLogger(attemptId) {
    attemptIdGlobal = attemptId;
+  enabled = true;
    // Restore any pending events from previous sessions
    queue = loadQueue();
    startBatching();
  }
  
+export function shutdownEventLogger() {
+  enabled = false;
+  attemptIdGlobal = null;
+  queue = [];
+  saveQueue(queue);
+  if (batchIntervalId) {
+    window.clearInterval(batchIntervalId);
+    batchIntervalId = null;
+  }
+  if (beforeUnloadHandler) {
+    window.removeEventListener("beforeunload", beforeUnloadHandler);
+    beforeUnloadHandler = null;
+  }
+}
+
  export function buildBaseMetadata() {
    return {
      userAgent: navigator.userAgent,
@@ -47,7 +65,7 @@
  }
  
  export function logEvent(type, payload = {}) {
-   if (!attemptIdGlobal) return;
+  if (!enabled || !attemptIdGlobal) return;
    const event = {
      attemptId: attemptIdGlobal,
      type,
@@ -62,7 +80,7 @@
  }
  
  async function flushQueue() {
-   if (!attemptIdGlobal || queue.length === 0) return;
+  if (!enabled || !attemptIdGlobal || queue.length === 0) return;
    const toSend = [...queue];
    try {
      // Prefer sendBeacon for reliability on unload
@@ -100,8 +118,9 @@
      flushQueue();
    }, 5000);
  
-   window.addEventListener("beforeunload", () => {
-     flushQueue();
-   });
+  beforeUnloadHandler = () => {
+    flushQueue();
+  };
+  window.addEventListener("beforeunload", beforeUnloadHandler);
  }
  

@@ -1,6 +1,6 @@
  import React, { useEffect, useState } from "react";
  import { Timer } from "./Timer";
- import { initEventLogger, logEvent } from "./eventLogger";
+import { initEventLogger, logEvent, shutdownEventLogger } from "./eventLogger";
  
  const API_BASE = "/api";
  
@@ -30,9 +30,9 @@
    return res.json();
  }
  
- function useBrowserEnforcement(attemptId) {
+function useBrowserEnforcement(attemptId, enabled) {
    useEffect(() => {
-     if (!attemptId) return;
+    if (!attemptId || !enabled) return;
  
      function handleVisibilityChange() {
        logEvent("TAB_VISIBILITY_CHANGED", { visibilityState: document.visibilityState });
@@ -84,7 +84,7 @@
        document.removeEventListener("paste", handlePaste);
        document.removeEventListener("keydown", handleKeydown);
      };
-   }, [attemptId]);
+  }, [attemptId, enabled]);
  }
  
  export function App() {
@@ -95,7 +95,7 @@
    const [durationMinutes, setDurationMinutes] = useState(30);
    const [submitted, setSubmitted] = useState(false);
  
-   useBrowserEnforcement(attemptId);
+  useBrowserEnforcement(attemptId, !submitted);
  
    useEffect(() => {
      if (!attemptId) return;
@@ -150,6 +150,7 @@
        const res = await submitAttempt(attemptId, "candidate_clicked_submit");
        setStatus(res.status);
        setSubmitted(true);
+      shutdownEventLogger();
      } catch (e) {
        console.error(e);
      }
@@ -160,14 +161,15 @@
      return submitAttempt(attemptId, "timer_expired_auto_submit").then((res) => {
        setStatus(res.status);
        setSubmitted(true);
+      shutdownEventLogger();
      });
    }
  
    useEffect(() => {
-     if (!attemptId) return;
+    if (!attemptId || submitted) return;
      const id = window.setInterval(syncTimer, 30_000);
      return () => window.clearInterval(id);
-   }, [attemptId]);
+  }, [attemptId, submitted]);
  
    const disabled = status === "starting" || submitted;
  
