@@ -3,11 +3,14 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
   entry: "./src/index.jsx",
+
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "bundle.js",
-    publicPath: "/"
+    publicPath: "/",
+    clean: true
   },
+
   module: {
     rules: [
       {
@@ -26,9 +29,16 @@ module.exports = {
       }
     ]
   },
+
   resolve: {
     extensions: [".js", ".jsx"]
   },
+
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: "./public/index.html"
+    })
+  ],
 
   devServer: {
     static: {
@@ -36,12 +46,6 @@ module.exports = {
     },
     historyApiFallback: true,
     port: 3000,
-    plugins: [
-      new HtmlWebpackPlugin({
-        template: "./public/index.html",
-      }),
-    ],
-
     proxy: [
       {
         context: ["/api"],
