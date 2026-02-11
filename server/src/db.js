@@ -19,6 +19,8 @@ async function wait(ms) {
 }
 
 export async function initSchema(retries = 5) {
+  await pool.query("CREATE DATABASE IF NOT EXISTS secure_test");
+  await pool.query("USE secure_test");
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       console.log(`DB init attempt ${attempt}...`);
