@@ -1,5 +1,6 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const Dotenv = require("dotenv-webpack");
 
 module.exports = {
   entry: "./src/index.jsx",
@@ -35,15 +36,12 @@ module.exports = {
   },
 
   plugins: [
-    new HtmlWebpackPlugin({
-      template: "./public/index.html"
-    })
+    new HtmlWebpackPlugin({ template: "./public/index.html" }),
+    new Dotenv()
   ],
 
   devServer: {
-    static: {
-      directory: path.join(__dirname, "public")
-    },
+    static: { directory: path.join(__dirname, "public") },
     historyApiFallback: true,
     port: 3000,
     proxy: [
