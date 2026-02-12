@@ -2,7 +2,7 @@
  import { Timer } from "./Timer";
 import { initEventLogger, logEvent, shutdownEventLogger } from "./eventLogger";
  
- const API_BASE = process.env.REACT_APP_API_URL + "/api";
+ const API_BASE = `${process.env.REACT_APP_API_URL}/api`;
  console.log(API_BASE);
  
  async function startAttempt(candidateId, durationSeconds) {
