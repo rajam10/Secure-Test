@@ -84,7 +84,7 @@ export function shutdownEventLogger() {
    const toSend = [...queue];
    try {
      // Prefer sendBeacon for reliability on unload
-     const url = `/api/attempts/${encodeURIComponent(attemptIdGlobal)}/events/batch`;
+     const url = `${process.env.REACT_APP_API_URL}/api/attempts/${encodeURIComponent(attemptIdGlobal)}/events/batch`;
      const body = JSON.stringify({ events: toSend });
      const headers = { type: "application/json" };
  
