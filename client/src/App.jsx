@@ -390,23 +390,6 @@ function useBrowserEnforcement(attemptId, enabled) {
              >
                Start Assessment
              </button>
-             <button
-               type="button"
-               onClick={() => window.location.reload()}
-               style={{
-                 padding: "10px 16px",
-                 marginLeft: "5px",
-                 borderRadius: "999px",
-                 border: "none",
-                 background:
-                   "linear-gradient(135deg, rgb(146, 56, 248), rgb(72, 59, 246), rgba(236,72,153,1))",
-                 color: "white",
-                 fontWeight: 600,
-                 cursor: "pointer"
-               }}
-             >
-               Back to main menu
-             </button>
            </form>
          )}
  
@@ -454,9 +437,27 @@ function useBrowserEnforcement(attemptId, enabled) {
                Submit Assessment
              </button>
              {submitted && (
-               <p style={{ marginTop: "12px", color: "#22c55e", fontSize: "14px" }}>
+               <><p style={{ marginTop: "12px", color: "#22c55e", fontSize: "14px" }}>
                  Assessment submitted. Further edits are disabled.
                </p>
+               <button
+               type="button"
+               onClick={() => window.location.reload()}
+               style={{
+                 padding: "10px 16px",
+                 marginLeft: "5px",
+                 borderRadius: "999px",
+                 border: "none",
+                 background:
+                   "linear-gradient(135deg, rgb(146, 56, 248), rgb(72, 59, 246), rgba(236,72,153,1))",
+                 color: "white",
+                 fontWeight: 600,
+                 cursor: "pointer"
+               }}
+             >
+               Back to main menu
+             </button>
+               </>
              )}
            </>
          )}
