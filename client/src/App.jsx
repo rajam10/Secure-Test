@@ -4,6 +4,7 @@ import { initEventLogger, logEvent, shutdownEventLogger } from "./eventLogger";
  
  const API_BASE = `${process.env.REACT_APP_API_URL}/api`;
  console.log(API_BASE);
+ console.log("ALL ENV:", process.env);
  
  async function startAttempt(candidateId, durationSeconds) {
    const res = await fetch(`${API_BASE}/attempts/start`, {
