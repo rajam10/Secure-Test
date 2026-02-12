@@ -12,7 +12,7 @@ import { initEventLogger, logEvent, shutdownEventLogger } from "./eventLogger";
      headers: { "Content-Type": "application/json" },
      body: JSON.stringify({ candidateId, durationSeconds })
    });
-   if (!res.ok) throw new Error("Failed to start attempt");
+   if (!res.ok) throw new Error((await res.json()).error || "Failed to start attempt");
    return res.json();
  }
  
@@ -28,7 +28,7 @@ import { initEventLogger, logEvent, shutdownEventLogger } from "./eventLogger";
      headers: { "Content-Type": "application/json" },
      body: JSON.stringify({ reason })
    });
-   if (!res.ok) throw new Error("Failed to submit");
+   if (!res.ok) throw new Error((await res.json()).error || "Failed to submit");
    return res.json();
  }
  
@@ -136,6 +136,7 @@ function useBrowserEnforcement(attemptId, enabled) {
      } catch (err) {
        console.error(err);
        setStatus("error");
+       alert(err.message);
      } finally {
        setStatus("in_progress");
      }
