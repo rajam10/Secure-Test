@@ -12,12 +12,19 @@ router.post("/start", async (req, res) => {
     if (!candidateId || !durationSeconds) {
       return res.status(400).json({ error: "candidateId and durationSeconds are required" });
     }
+    const pool = getPool();
+    const [rows] = await pool.query(
+      `select candidate_id from attempts where candidate_id=?`,
+      [candidateId]
+    );
+    if (rows.length > 0) {
+      return res.status(400).json({ error: "Candidate already has an attempt" });
+    }
 
     const attemptId = uuidv4();
     const start = nowUtc();
     const expires = new Date(start.getTime() + durationSeconds * 1000);
 
-    const pool = getPool();
     await pool.query(
       `INSERT INTO attempts (id, candidate_id, duration_seconds, started_at, expires_at, status)
        VALUES (?, ?, ?, ?, ?, 'in_progress')`,
